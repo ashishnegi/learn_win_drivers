@@ -53,5 +53,12 @@ In windbg run,
 <br>
 <img src="images/kdprint_out_in_debugview.png" alt="KdPrint output in debug view tool." width="600"/>
 
+### Running client
+Choose a thread id for any process. You can use sysinternals `process explorer` for this purpose.
 
+```
+C:\Windows\system32> y:\x64\Debug\thread_booster_client.exe 6736 25
+Successfully set thread priority!!!
+```
 
+<img src="images/driver_working.png" alt="Thread priority is changed succesfully by making call to driver." width="600"/>
