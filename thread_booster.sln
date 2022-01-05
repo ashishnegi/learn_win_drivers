@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.32002.261
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread_booster", "thread_booster.vcxproj", "{84F1B178-F1F1-4189-81F4-560E15D7805C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thread_booster_client", "..\thread_booster_client\thread_booster_client.vcxproj", "{3123AB5A-1FF3-4A38-80E9-7588A238D544}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -41,6 +43,18 @@ Global
 		{84F1B178-F1F1-4189-81F4-560E15D7805C}.Release|x86.ActiveCfg = Release|Win32
 		{84F1B178-F1F1-4189-81F4-560E15D7805C}.Release|x86.Build.0 = Release|Win32
 		{84F1B178-F1F1-4189-81F4-560E15D7805C}.Release|x86.Deploy.0 = Release|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|ARM.ActiveCfg = Debug|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|ARM64.ActiveCfg = Debug|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|x64.ActiveCfg = Debug|x64
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|x64.Build.0 = Debug|x64
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|x86.ActiveCfg = Debug|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Debug|x86.Build.0 = Debug|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|ARM.ActiveCfg = Release|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|ARM64.ActiveCfg = Release|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|x64.ActiveCfg = Release|x64
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|x64.Build.0 = Release|x64
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|x86.ActiveCfg = Release|Win32
+		{3123AB5A-1FF3-4A38-80E9-7588A238D544}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
