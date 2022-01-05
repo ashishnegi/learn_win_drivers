@@ -1,4 +1,23 @@
-# Thread Booster Kernel Driver
+# Thread Priority Booster Kernel Driver
+This is sample kernel driver that shows interaction between windows driver and a client.
+This driver boosts priority of threads which is not possible from user mode.
+
+## Set up for kernel debugging:
+1. Create a windows VM
+1. Enable testsigning for being able to load unsigned drivers.
+1. Enable kernel debugging and attach through windbg.
+```
+# on guest VM
+bcdedit /set testsigning on
+bcdedit /debug on
+bcdedit /dbgsettings serial debugport:1 baudrate:115200
+```
+
+Set com port in Virtual Box:
+<br><img src="images/set_com_port_in_virtualbox.png" alt="set com port in virtual box" width="600"/>
+
+Attach to guest vm kernel through windbg:
+<br><img src="images/windbg_set_comport.png" alt="windbg settings for attaching to guest kernel" width="600"/>
 
 ## Load Driver:
 
@@ -61,4 +80,4 @@ C:\Windows\system32> y:\x64\Debug\thread_booster_client.exe 6736 25
 Successfully set thread priority!!!
 ```
 
-<img src="images/driver_working.png" alt="Thread priority is changed succesfully by making call to driver." width="600"/>
+<img src="images/driver_working.png" alt="Thread priority is changed succesfully by making call to driver." width="600" height="600"/>
