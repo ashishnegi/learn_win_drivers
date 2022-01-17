@@ -23,7 +23,7 @@ extern "C" {
 
 		NTSTATUS status = IoCreateDevice(DriverObject, 0, &deviceName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
 		if (!NT_SUCCESS(status)) {
-			KdPrint(("Failure (0x%08X): while creating device with name : %wZ.\n", status, &deviceName));
+			KdPrint(("Failure (0x%08X): while creating device with name : %wZ.\n", status, deviceName));
 			return status;
 		}
 
@@ -31,7 +31,7 @@ extern "C" {
 		UNICODE_STRING symbolicLinkName = RTL_CONSTANT_STRING(THREAD_BOOSTER_SYMBOLIC_LINK);
 		status = IoCreateSymbolicLink(&symbolicLinkName, &deviceName);
 		if (!NT_SUCCESS(status)) {
-			KdPrint(("Failure (0x%08X): while creating symbolic link %wZ for device name %wZ.\n", status, &symbolicLinkName, &deviceName));
+			KdPrint(("Failure (0x%08X): while creating symbolic link %wZ for device name %wZ.\n", status, symbolicLinkName, deviceName));
 			
 			// cleanup in case of failures.
 			IoDeleteDevice(DeviceObject);
