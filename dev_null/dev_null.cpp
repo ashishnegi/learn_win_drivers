@@ -3,8 +3,10 @@
 namespace DevNull {
 	void DriverUnload(_In_ PDRIVER_OBJECT);
 	NTSTATUS DeviceCreateOrClose(_In_ PDEVICE_OBJECT, _Inout_ PIRP);
-	NTSTATUS DeviceRead(_In_ PDEVICE_OBJECT, _Inout_ PIRP);
-	NTSTATUS DeviceWrite(_In_ PDEVICE_OBJECT, _Inout_ PIRP);
+	NTSTATUS DevNullRead(_In_ PDEVICE_OBJECT, _Inout_ PIRP);
+	NTSTATUS DevNullWrite(_In_ PDEVICE_OBJECT, _Inout_ PIRP);
+
+	NTSTATUS CompleteIrp(PIRP, NTSTATUS Status = STATUS_SUCCESS, ULONG_PTR Information = 0);
 }
 
 extern "C" {
@@ -14,77 +16,85 @@ extern "C" {
 		DriverObject->DriverUnload = DevNull::DriverUnload;
 		DriverObject->MajorFunction[IRP_MJ_CREATE] = DevNull::DeviceCreateOrClose;
 		DriverObject->MajorFunction[IRP_MJ_CLOSE] = DevNull::DeviceCreateOrClose;
-		DriverObject->MajorFunction[IRP_MJ_READ] = DevNull::DeviceRead;
-		DriverObject->MajorFunction[IRP_MJ_WRITE] = DevNull::DeviceWrite;
+		DriverObject->MajorFunction[IRP_MJ_READ] = DevNull::DevNullRead;
+		DriverObject->MajorFunction[IRP_MJ_WRITE] = DevNull::DevNullWrite;
 
 		UNICODE_STRING devName = RTL_CONSTANT_STRING(L"\\Device\\DevNullDevice");
 		
 		PDEVICE_OBJECT DeviceObject;
 		NTSTATUS status = IoCreateDevice(DriverObject, 0, &devName, FILE_DEVICE_UNKNOWN, 0, FALSE, &DeviceObject);
 		if (!NT_SUCCESS(status)) {
-			KdPrint(("DevNull: Failure (0x%08X): while creating device with name %wZ.", status, devName));
+			KdPrint(("DevNull: Failure (0x%08X): while creating device with name %wZ.\n", status, devName));
 			return status;
 		}
 
-		UNICODE_STRING symName = RTL_CONSTANT_STRING(L".\\??\\DevNullSymLink");
+		// Users can have arbitrary large size of buffers. Use Direct IO to reduce copy overhead.
+		DeviceObject->Flags |= DO_DIRECT_IO;
+
+		UNICODE_STRING symName = RTL_CONSTANT_STRING(L"\\??\\DevNullSymLink");
+		// delete leaked symbolic link -- happened during testing
+		IoDeleteSymbolicLink(&symName);
+
 		status = IoCreateSymbolicLink(&symName, &devName);
 		if (!NT_SUCCESS(status)) {
-			KdPrint(("DevNull: Failure (0x%08X): while creating symbolic name with name %wZ.", status, symName));
+			KdPrint(("DevNull: Failure (0x%08X): while creating symbolic name with name %wZ.\n", status, symName));
 			IoDeleteDevice(DeviceObject);
 			return status;
 		}
 		
-		KdPrint(("DevNull: Succssfully created driver with device name : %wZ, symbolic name : %wZ", devName, symName));
+		KdPrint(("DevNull: Successfully created driver with device name : %wZ, symbolic name : %wZ.\n", devName, symName));
 		return status;
 	}
 }
 
 namespace DevNull {
 	void DriverUnload(_In_ PDRIVER_OBJECT Driver) {
-		KdPrint(("DevNull: Unloading Dev Null Driver"));
+		KdPrint(("DevNull: Unloading Dev Null Driver.\n"));
 		
-		UNICODE_STRING symName = RTL_CONSTANT_STRING(L".\\??\\DevNullSymLink");
+		UNICODE_STRING symName = RTL_CONSTANT_STRING(L"\\??\\DevNullSymLink");
 		NTSTATUS status = IoDeleteSymbolicLink(&symName);
 		if (!NT_SUCCESS(status)) {
-			KdPrint(("DevNull: Failure (0x%08X) while deleting symbolic link %wZ", status, symName));
+			KdPrint(("DevNull: Failure (0x%08X) while deleting symbolic link %wZ.\n", status, symName));
 			// continue cleanup.
 		}
 
 		IoDeleteDevice(Driver->DeviceObject);
-		KdPrint(("DevNull: Unload finished"));
+		KdPrint(("DevNull: Unload finished.\n"));
 	}
 
 	NTSTATUS DeviceCreateOrClose(_In_ PDEVICE_OBJECT, _Inout_ PIRP Irp) {
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		Irp->IoStatus.Information = 0;
-
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-		// don't touch Irp now.
-
-		KdPrint(("DevNull: CreateOrClose finished"));
-		return STATUS_SUCCESS; 
+		KdPrint(("DevNull: CreateOrClose finished.\n"));
+		return CompleteIrp(Irp);
 	}
 
-	NTSTATUS DeviceRead(_In_ PDEVICE_OBJECT, _Inout_ PIRP Irp) {
-		// auto stack = IoGetCurrentIrpStackLocation(Irp);
-		auto status = STATUS_SUCCESS;
-
+	NTSTATUS DevNullRead(_In_ PDEVICE_OBJECT, _Inout_ PIRP Irp) {
+		auto stack = IoGetCurrentIrpStackLocation(Irp);
+		const auto len = stack->Parameters.Read.Length;
 		// Get the output buffer.
+		if (len == 0) {
+			return CompleteIrp(Irp, STATUS_INVALID_BUFFER_SIZE);
+		}
+
 		// Write zeroes on it.
+		auto buf = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
+		if (nullptr == buf) {
+			return CompleteIrp(Irp, STATUS_INSUFFICIENT_RESOURCES);
+		}
 
-		Irp->IoStatus.Status = status;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-		return status;
+		memset(buf, 0, len);
+		return CompleteIrp(Irp, STATUS_SUCCESS, len);
 	}
 
-	NTSTATUS DeviceWrite(_In_ PDEVICE_OBJECT, _Inout_ PIRP Irp) { 
+	NTSTATUS DevNullWrite(_In_ PDEVICE_OBJECT, _Inout_ PIRP Irp) { 
 		// don't do anything - just /dev/null :)
-		Irp->IoStatus.Status = STATUS_SUCCESS;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		auto stack = IoGetCurrentIrpStackLocation(Irp);
+		return CompleteIrp(Irp, STATUS_SUCCESS, stack->Parameters.Write.Length);
+	}
 
-		return STATUS_SUCCESS;
+	NTSTATUS CompleteIrp(PIRP Irp, NTSTATUS Status, ULONG_PTR Information) {
+		Irp->IoStatus.Status = Status;
+		Irp->IoStatus.Information = Information;
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return Status;
 	}
 }
