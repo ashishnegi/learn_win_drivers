@@ -19,7 +19,7 @@ Set com port in Virtual Box:
 Attach to guest vm kernel through windbg:
 <br><img src="images/windbg_set_comport.png" alt="windbg settings for attaching to guest kernel" width="600"/>
 
-## Load Driver:
+## Load Thread Booster Driver:
 
 ```
 C:\Windows\system32>sc
@@ -81,3 +81,42 @@ Successfully set thread priority!!!
 ```
 
 <img src="images/driver_working.png" alt="Thread priority is changed succesfully by making call to driver." width="600" height="600"/>
+
+<br>
+
+## /dev/null driver
+
+```
+Y:\dev_null\x64\Debug>sc create devnull type= kernel binPath= y:\dev_null\x64\Debug\dev_null.sys
+
+Y:\dev_null\x64\Debug>sc start devnull1
+
+SERVICE_NAME: devnull1
+        TYPE               : 1  KERNEL_DRIVER
+        STATE              : 4  RUNNING
+                                (STOPPABLE, NOT_PAUSABLE, IGNORES_SHUTDOWN)
+        WIN32_EXIT_CODE    : 0  (0x0)
+        SERVICE_EXIT_CODE  : 0  (0x0)
+        CHECKPOINT         : 0x0
+        WAIT_HINT          : 0x0
+        PID                : 0
+        FLAGS              :
+
+Y:\dev_null\x64\Debug>dev_null_client.exe
+Trying to read and write 42 bytes from /dev/null driver.
+Read 42 bytes. All zeroes :)
+Written 42 bytes.
+Sucess!!!
+
+Y:\dev_null\x64\Debug>sc stop devnull1
+
+SERVICE_NAME: devnull1
+        TYPE               : 1  KERNEL_DRIVER
+        STATE              : 1  STOPPED
+        WIN32_EXIT_CODE    : 0  (0x0)
+        SERVICE_EXIT_CODE  : 0  (0x0)
+        CHECKPOINT         : 0x0
+        WAIT_HINT          : 0x0
+
+Y:\dev_null\x64\Debug>
+```
