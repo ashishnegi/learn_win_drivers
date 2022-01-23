@@ -33,6 +33,7 @@ int main(int argc, const char* argv[])
         return 1;
     }
 
+    ::CloseHandle(hDevice);
     std::cout << "Successfully set thread priority!!!\n";
     return 0;
 }

@@ -61,6 +61,7 @@ int main()
 		}
 	}
 
+	::CloseHandle(devNull);
 	std::cout << "Sucess!!!\n";
 
 	return 0;
